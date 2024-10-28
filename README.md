@@ -1,10 +1,13 @@
 ## Preprocessing:
 
 * The NA12878 BAM file links to a CRAM file that is difficult to open using standard Samtools. So my first step is to find a version that works with the cram file (samtools 1.20 with htslib 1.20 on Mac) to convert the cram file to BAM file.
-* In the assignment description, the WGS data is aligned to "GIAB" and requested the alignment to GRCH38 reference genome. I searched the website and found the fastQ files.
+* In the assignment description, the WGS data is probably aligned to "GIAB" reference genome(?) and requested the alignment to GRCH38 reference genome. We decided to re-map to GRCH38 reference genome, this step could be unneccessary, but it is helpful to correct display the results on UCSC genome browser.
+* The CRAM is mapped to ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa based header information of [NA12878.alt_bwamem_GRCh38DH.20150718.CEU.low_coverage.H](src/NA12878.alt_bwamem_GRCh38DH.20150718.CEU.low_coverage.H)
+* I downloaded the standard GRCH38 reference genome from https://s3.amazonaws.com/igenomes.illumina.com/Homo_sapiens/NCBI/GRCh38/Homo_sapiens_NCBI_GRCh38.tar.gz
+* I searched the website and found the fastQ files in the same directory of CRAM file.
 * After I downloaded the fastQ files, I noticed the sequencing qualities were abnormal (many repeated '?').
-* I extracted the fastQ files from the CRAM files instead. I checked that the fastQ files are complete, they are pair-ended.
-* Next, I mapped the fastQ file to NCBI GRCH38 reference genome, generated BAM and BW files.
+* Instead, I extracted the fastQ files from the CRAM files instead. I checked that the fastQ files are complete, they are pair-ended.
+* Next, I mapped the fastQ file to NCBI GRCH38 reference genome using BWA (mem), generated BAM and BW files.
 * I used Picard to remove the duplicates and generated BAM and BW files.
 * The sequencing data is pair-ended, the segments of the middle of R1 & R2 reads should be considered as covered regions. Then I generated segment files in bed format by merging R1 and R2 regions. Single mapped and distance of pairs longer than 10K are trimmed. I noticed most of the regions have strand of +(R1, left) and -(R2, right), shouldn't 50% +(R1, left) with -(R2, right) and 50% +(R2, left) with -(R1, right)?
 * The segment files are converted into bed, BB, and BW formats.
@@ -42,7 +45,7 @@ chr1	10002	10418	416	+
 * Ploted region of interest (pair-end segments reflect better coverage than R1/R2 reads):
 ![png/chr1.png](png/chr1.png)
 
-* To calculate the depth of the coverage, we can also use samtools or bedtools coverage, note that the depth may not reflect the number of reads, for example, for a region of two bp, depth could be all 1, but each bp could come from different reads. I'm not sure how stringent the requirement is. 
+* To calculate the depth of the coverage, we can also use samtools or bedtools coverage depending on the stringency, note that the depth may not reflect the number of reads, for example, for a region of two bp, depth could be all 1, but each bp could come from different reads. 
 * For a series of regions, samtools or bedtools coverage calculate the coverage efficiently. Note that if the regions overlap or are too close, reads can be counted multiple times. And, when only a portion of the reads overlap, should it be counted as one or partial?
 * For the pair-ended reads, counting segments that include R1 and R2 is a good practice since they have biological meaning. Meanwhile, part of the reads, too long or single-mapped reads will be dropped.
 * Quality should also be considered in the data processing. When the qualities of the reads are too low, we should drop the mapping (Q30?, not implemented yet)
