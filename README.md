@@ -93,6 +93,7 @@ java -jar picard.jar MarkDuplicates     I=$ID.sam     O=$ID.bam     M=${ID}_dup_
 ID=NA12878_rmdup
 bedtools genomecov -ibam $ID.bam -bg > $ID.bedgraph
 LC_ALL=C sort -S 30% --parallel=8 -k1,1 -k2,2n $ID.bedgraph > ${ID}_srt.bedgraph
+bedGraphToBigWig ${ID}_srt.bedgraph chrom.sizes ${ID}_srt.bw
 ```
 
 * mkpe.sh
@@ -101,7 +102,8 @@ LC_ALL=C sort -S 30% --parallel=8 -k1,1 -k2,2n $ID.bedgraph > ${ID}_srt.bedgraph
 bedtools bamtobed -bedpe -i $ID.bam > $ID.bedpe
 ./mkpe.pl $ID.bedpe | LC_ALL=C sort -S 30% -k1,1 -k2,2n --parallel=8 > ${ID}_mkpe.bed
 bedtools genomecov -i ${ID}_mkpe.bed -bg -g chrom.sizes > ${ID}_mkpe.bedgraph
-bedGraphToBigWig ${ID}_mkpe.bedgraph chrom.sizes ${ID}_mkpe.bw
+LC_ALL=C sort -S 30% --parallel=8 -k1,1 -k2,2n ${ID}_mkpe.bedgraph > ${ID}_srt.bedgraph
+bedGraphToBigWig ${ID}_srt.bedgraph chrom.sizes ${ID}_mkpe.bw
 ```
 
 * bb.sh
