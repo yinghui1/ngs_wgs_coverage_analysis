@@ -70,7 +70,7 @@ python plot.py
 
 * Sort fastq/bam file:
 ```
-zcat sample.fastq.gz | LC_ALL=C sort -S 30% --parallel=8 | gzip > sorted.fastq.gz
+zcat sample.fastq.gz | paste - - - - | LC_ALL=C sort -S 30% --parallel=8 | sed 's/\t/\n/g' | gzip > sorted.fastq.gz
 samtoos view sample.bam | paste - - - - | LC_ALL=C sort -S 30% --parallel=8 | sed 's/\t/\n/g' | samtools view -Sb - > sorted.bam
 ```
 
