@@ -47,7 +47,7 @@ chr1	10002	10418	416	+
 * For the pair-ended reads, counting segments that include R1 and R2 is a good practice since they have biological meaning. Meanwhile, part of the reads, too long or single-mapped reads will be dropped.
 * Quality should also be considered in the data processing. When the qualities of the reads are too low, we should drop the mapping (Q30?, not implemented yet)
 * Reads mapped to alternate locus (Not implemented yet)
-* Current results:
+* Current results on UCSC genome browser:
 **[https://genome.ucsc.edu/s/Susan123/fulgent](https://genome.ucsc.edu/s/Susan123/fulgent)**
 * **Rmdup** removed 40% of duplicates & biases of mapped regions:
 ![png/rmdup.png](png/rmdup.png)
