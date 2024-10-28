@@ -59,7 +59,12 @@ chr1	10002	10418	416	+
 
 * For a specific region of interest, we can plot the statistics and distributions.
 * I drafted a data processing script in Python.
-
+```
+# Rmdup version, no fragment included yet
+samtools depth -a -b egfr.bed NA12878_rmdup.bam > egfr.txt
+python plot.py
+```
+![png/egfr.png](png/egfr.png)
 
 ### Scripts:
 
