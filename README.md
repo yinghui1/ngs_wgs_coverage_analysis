@@ -11,6 +11,7 @@
 * I used Picard to remove the duplicates and generated BAM and BW files.
 * The sequencing data is pair-ended, the segments of the middle of R1 & R2 reads should be considered as covered regions. Then I generated segment files in bed format by merging R1 and R2 regions. Single mapped and distance of pairs longer than 10K are trimmed. I noticed most of the regions have strand of +(R1, left) and -(R2, right), shouldn't 50% +(R1, left) with -(R2, right) and 50% +(R2, left) with -(R1, right)?
 * The segment files are converted into bed, BB, and BW formats.
+* Data are processed on AWS EC2, and the results are visible at UCSC genome browser: **[https://genome.ucsc.edu/s/Susan123/fulgent](https://genome.ucsc.edu/s/Susan123/fulgent)**
 
 ## Data analysis:
 
@@ -43,19 +44,18 @@ chr1	10002	10418	416	+
     162     810    3726
 ```
 * Ploted region of interest (pair-end segments reflect better coverage than R1/R2 reads):
-![png/chr1.png](png/chr1.png)
+[<img src="png/chr1.png" width="600"/>](png/chr1.png)
 
 * To calculate the depth of the coverage, we can also use samtools or bedtools coverage depending on the stringency, note that the depth may not reflect the number of reads, for example, for a region of two bp, depth could be all 1, but each bp could come from different reads. 
 * For a series of regions, samtools or bedtools coverage calculate the coverage efficiently. Note that if the regions overlap or are too close, reads can be counted multiple times. And, when only a portion of the reads overlap, should it be counted as one or partial?
 * For the pair-ended reads, counting segments that include R1 and R2 is a good practice since they have biological meaning. Meanwhile, part of the reads, too long or single-mapped reads will be dropped.
 * Quality should also be considered in the data processing. When the qualities of the reads are too low, we should drop the mapping (Q30?, not implemented yet)
 * Reads mapped to alternate locus (Not implemented yet)
-* Current results on UCSC genome browser:
-**[https://genome.ucsc.edu/s/Susan123/fulgent](https://genome.ucsc.edu/s/Susan123/fulgent)**
 * **Rmdup** removed 40% of duplicates & biases of mapped regions:
-![png/rmdup.png](png/rmdup.png)
+[<img src="png/rmdup.png" width="600"/>](png/rmdup.png)
 * **Fragment** of pair-ended reads reflects better coverage, where **rmdup** made less impacts:
-![png/pe.png](png/pe.png)
+[<img src="png/pe.png" width="600"/>](png/pe.png)
+
 * The WGS coverage should include both reads(R1/R2) and the fragment overlap. We need to merge and remove the duplicates for the WGS coverage (not implemented yet)
  
 ## Post-processing:
@@ -105,8 +105,7 @@ chr1    8312956 8322956
 37,chr1,113064858,113074858,3.9336,4.0,2.841512104496477
 ```
 
-<img src="png/random_region_distribution.png" alt="Alt text" width="600"/>
-![png/random_region_distribution.png](png/random_region_distribution.png)
+[<img src="png/random_region_distribution.png" width="600"/>](png/random_region_distribution.png)
 
 ### Scripts:
 
