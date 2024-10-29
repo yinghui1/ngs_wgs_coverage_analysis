@@ -60,14 +60,14 @@ chr1	10002	10418	416	+
  
 ## Post-processing:
 
-* For a specific region of interest, we can plot the statistics and distributions.
+* We generated random regions using random.pl, then we plot the distributions.
 * I drafted a data processing script in Python.
+
 ```
-# Rmdup version, no fragment included yet
-samtools depth -a -b egfr.bed NA12878_rmdup.bam > egfr.txt
-python plot.py
+./random.pl > random.bed
+python coverage_dev.py --bam NA12878_rmdup.bam --bed random.bed --output random --reference genome.fa
 ```
-![png/egfr.png](png/egfr.png)
+![png/random_region_distribution.png](png/random_region_distribution.png)
 
 ### Scripts:
 

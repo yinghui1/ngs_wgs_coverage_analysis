@@ -36,7 +36,7 @@ class CoverageAnalyzer:
             self.logger.error(f"Error validating input: {str(e)}")
             return False
     
-    def read_bed_file(self,bed_file):
+    def read_bed_file(self, bed_file):
         regions = []
         with open(bed_file, 'r') as f:
             for line in f:
@@ -49,28 +49,31 @@ class CoverageAnalyzer:
                     'end': int(parts[2])
                 })
         return regions
-
         
     def calculate_coverage_for_region(self, region):
         """Calculate coverage for a specific genomic region."""
-        coverage_array = []
         try:
             with pysam.AlignmentFile(self.bam_file, "rb") as bam:
-                # Calculate coverage for the region
+                # Initialize array with zeros for the entire region
+                region_length = region['end'] - region['start']
+                coverage_array = np.zeros(region_length, dtype=int)
+                
+                # Fill in coverage values from pileup
                 for pileup_column in bam.pileup(
                     region['chrom'],
                     region['start'],
                     region['end'],
                     truncate=True
                 ):
-                    #coverage_value = pileup_column.n if pileup_column.n is not None else 0
-                    print(pileup_column.n)
-                    coverage_array.append(pileup_column.n)
-
+                    # Calculate relative position within the region
+                    #print(pileup_column.n)
+                    pos_in_region = pileup_column.pos - region['start']
+                    if pileup_column.n:
+                        coverage_array[pos_in_region] = pileup_column.n
                     
             return {
                 'region': region,
-                'coverage': np.array(coverage_array),
+                'coverage': coverage_array,
                 'mean_coverage': np.mean(coverage_array),
                 'median_coverage': np.median(coverage_array),
                 'std_coverage': np.std(coverage_array)
@@ -91,14 +94,16 @@ class CoverageAnalyzer:
                         region['start'],
                         region['end']
                     )
+                    if len(sequence)==0:
+                        print(region['chrom'],region['start'],region['end'])
                     gc_content = (
                         sequence.count('G') + sequence.count('C')
                     ) / len(sequence)
                     gc_bias_data['gc_content'].append(gc_content)
                     gc_bias_data['mean_coverage'].append(result['mean_coverage'])
-        gc_bias= pd.DataFrame(gc_bias_data)
+        gc_bias = pd.DataFrame(gc_bias_data)
         gc_bias.to_csv("gc_bias.csv")
-        return pd.DataFrame(gc_bias_data)            
+        return gc_bias
     
     def process_regions_parallel(self, regions, num_processes=4):
         """Process multiple regions in parallel."""
@@ -113,12 +118,10 @@ class CoverageAnalyzer:
                 if result:
                     results.append(result)
         return results
-        
 
-    
     def generate_coverage_report(self, coverage_results):
-    #"""Generate comprehensive coverage report as a DataFrame."""
-    # Calculate global statistics
+        """Generate comprehensive coverage report as a DataFrame."""
+        # Calculate global statistics
         global_stats = {
             'mean_coverage': np.mean([r['mean_coverage'] for r in coverage_results]),
             'median_coverage': np.median([r['median_coverage'] for r in coverage_results]),
@@ -140,21 +143,22 @@ class CoverageAnalyzer:
         } for r in coverage_results]
 
         regions_df = pd.DataFrame(regions_data)
-        regions_df.to_csv("region.csv")
-        
+        regions_df.to_csv("regions.csv")
 
-        # Calculate coverage distribution percentiles
+        # Calculate coverage distribution percentiles including zeros
         all_coverage = np.concatenate([r['coverage'] for r in coverage_results])
-        regions_low = regions_df[regions_df["mean_coverage"] < np.percentile(all_coverage, 30)] 
+        regions_low = regions_df[regions_df["mean_coverage"] < np.percentile(all_coverage, 30)]
         regions_low.to_csv("regions_low.csv")
-        regions_high = regions_df[regions_df["mean_coverage"] > np.percentile(all_coverage, 70)] 
+        regions_high = regions_df[regions_df["mean_coverage"] > np.percentile(all_coverage, 70)]
         regions_high.to_csv("regions_high.csv")
+        
         coverage_table = pd.DataFrame({
             'position': range(len(all_coverage)),
             'depth': all_coverage
         })
         coverage_table.to_csv("coverage_depth.csv")
 
+        # Calculate percentiles including zero coverage positions
         percentiles = {
             'p10': np.percentile(all_coverage, 10),
             'p25': np.percentile(all_coverage, 25),
@@ -171,15 +175,14 @@ class CoverageAnalyzer:
         report_df = pd.concat([global_stats_df, percentiles_df, regions_df], axis=0, ignore_index=True)
 
         return report_df
-
         
     def plot_coverage_distribution(self, coverage_results, output_file):
-        
+        """Plot coverage distribution including zero coverage positions."""
         all_coverage = np.concatenate([r['coverage'] for r in coverage_results])
         
         plt.figure(figsize=(10, 6))
-        plt.hist(all_coverage, bins=1000, alpha=0.75)
-        plt.xlim(0, 20)
+        plt.hist(all_coverage, bins=100, alpha=0.75)
+        plt.xlim(0, max(20, np.percentile(all_coverage, 99)))  # Adjust xlim to show zeros
         plt.xlabel('Coverage Depth')
         plt.ylabel('Frequency')
         plt.title('Coverage Distribution')
@@ -188,9 +191,7 @@ class CoverageAnalyzer:
         plt.legend()
         plt.savefig(output_file)
         plt.close()
-    
 
-    
 def main():
     parser = argparse.ArgumentParser(description='NGS Coverage Analysis Tool')
     parser.add_argument('--bam', required=True, help='Input BAM file')
@@ -208,26 +209,30 @@ def main():
         return
     
     # Define regions (from BED file or whole genome)
-    #regions = [{'chrom': 'chr1', 'start': 0, 'end': 1000000}]  # Example region
     if args.bed:
         print(args.bed)
         regions = analyzer.read_bed_file(args.bed)
     else:
         regions = [{'chrom': 'chr1', 'start': 0, 'end': 1000000}]  # Example region
+    
     # Calculate coverage
     coverage_results = analyzer.process_regions_parallel(regions)
     
     # Generate report
     report_df = analyzer.generate_coverage_report(coverage_results)
     
-    
-    #generate gc_bias table
+    # Generate gc_bias table
     analyzer.analyze_gc_bias(coverage_results)
+    
     # Plot distribution
     analyzer.plot_coverage_distribution(
         coverage_results,
         f"{args.output}_distribution.png"
     )
-  
+
 if __name__ == "__main__":
     main()
+
+
+
+
