@@ -62,6 +62,7 @@ chr1	10002	10418	416	+
 
 * I drafted a data processing script in Python [coverage_dev.py](src/coverage_dev.py). In this python file, I utilized pysam's functions to calucate depth for each basepair, I also calculate the mean, median, standard deviation for each regions in the bed file. The quatiles for all of the regions in the bed file are also calculated. To difine the regions with high and low regions, I defined them using the 30 and 70th quatiles. The results from this study is available in the [example](example/) folder.The program also provided reads distribution in the bed file. shown as below, this study is based on the bed file generated using [random.pl](src/random.pl). 
 
+* example:
 ```
 ./random.pl > random.bed
 python coverage_dev.py --bam NA12878_rmdup.bam --bed random.bed --output random --reference genome.fa
@@ -104,7 +105,7 @@ chr1    8312956 8322956
 37,chr1,113064858,113074858,3.9336,4.0,2.841512104496477
 ```
 
-<img src="png/random_region_distribution.png" alt="Alt text" width="300"/>
+<img src="png/random_region_distribution.png" alt="Alt text" width="600"/>
 ![png/random_region_distribution.png](png/random_region_distribution.png)
 
 ### Scripts:
