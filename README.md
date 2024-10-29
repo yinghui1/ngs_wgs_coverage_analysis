@@ -1,13 +1,13 @@
 ## Preprocessing:
 
 * The NA12878 BAM file links to a CRAM file that is difficult to open using standard Samtools. So my first step is to find a version that works with the cram file (samtools 1.20 with htslib 1.20 on Mac) to convert the cram file to BAM file.
-* In the assignment description, the WGS data is probably aligned to "GIAB" reference genome(?) and requested the alignment to GRCH38 reference genome. We decided to re-map to GRCH38 reference genome, this step could be unneccessary, but it is helpful to correct display the results on UCSC genome browser.
+* In the assignment description, the WGS data is probably aligned to "GIAB" reference genome(?) and requested the alignment to GRCH38 reference genome. We decided to re-map to GRCH38 reference genome, this step could be unnecessary, but it is helpful to correctly display the results on UCSC genome browser.
 * The CRAM is mapped to ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa based header information of [NA12878.alt_bwamem_GRCh38DH.20150718.CEU.low_coverage.H](src/NA12878.alt_bwamem_GRCh38DH.20150718.CEU.low_coverage.H)
 * I downloaded the standard GRCH38 reference genome from https://s3.amazonaws.com/igenomes.illumina.com/Homo_sapiens/NCBI/GRCh38/Homo_sapiens_NCBI_GRCh38.tar.gz
-* I searched the website and found the fastQ files in the same directory of CRAM file.
+* I searched the website and found the fastQ files in the same directory as CRAM file.
 * After I downloaded the fastQ files, I noticed the sequencing qualities were abnormal (many repeated '?').
 * Instead, I extracted the fastQ files from the CRAM files instead. I checked that the fastQ files are complete, they are pair-ended.
-* Next, I mapped the fastQ file to NCBI GRCH38 reference genome using BWA (mem), generated BAM and BW files.
+* Next, I mapped the fastQ file to NCBI GRCH38 reference genome using BWA (mem), and generated BAM and BW files.
 * I used Picard to remove the duplicates and generated BAM and BW files.
 * The sequencing data is pair-ended, the segments of the middle of R1 & R2 reads should be considered as covered regions. Then I generated segment files in bed format by merging R1 and R2 regions. Single mapped and distance of pairs longer than 10K are trimmed. I noticed most of the regions have strand of +(R1, left) and -(R2, right), shouldn't 50% +(R1, left) with -(R2, right) and 50% +(R2, left) with -(R1, right)?
 * The segment files are converted into bed, BB, and BW formats.
@@ -60,7 +60,7 @@ chr1	10002	10418	416	+
  
 ## Post-processing:
 
-* I drafted a data processing script in Python [coverage_dev.py](src/coverage_dev.py). In this python file, I utilized pysam's functions to calucate depth for each basepair, I also calculate the mean, median, standard deviation for each regions in the bed file. The quatiles for all of the regions in the bed file are also calculated. To difine the regions with high and low regions, I defined them using the 30 and 70th quatiles. The results from this study is available in the [example](example/) folder.The program also provided reads distribution in the bed file. shown as below, this study is based on the bed file generated using [random.pl](src/random.pl). 
+* I drafted a data processing script in Python [coverage_dev.py](src/coverage_dev.py). In this Python file, I utilized Pysam's functions to calculate depth for each base pair, I also calculated the mean, median, and standard deviation for each region in the bed file. The quartiles for all of the regions in the bed file are also calculated. To define the regions with high and low regions, I defined them using the 30 and 70th quartiles. The results from this study are available in the [example](example/) folder. The program also provided read distribution in the bed file. Shown below, this study is based on the bed file generated using [random.pl](src/random.pl). 
 
 * example:
 ```
